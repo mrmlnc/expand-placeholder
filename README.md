@@ -1,6 +1,6 @@
 # expand-placeholder
 
-> Replaces placeholders into a string.
+> Takes a string and interpolates the values.
 
 [![Travis Status](https://travis-ci.org/mrmlnc/expand-placeholder.svg?branch=master)](https://travis-ci.org/mrmlnc/expand-placeholder)
 
