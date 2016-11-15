@@ -53,7 +53,10 @@ module.exports = function expand(ctx, delimiters, input) {
 	}
 
 	// Utility: Move to the next character in the parse
-	function next(n = 1) {
+	function next(n) {
+		if (!n) {
+			n = 1;
+		}
 		for (let i = 0; i < n; i++) {
 			char = input[++current];
 		}
