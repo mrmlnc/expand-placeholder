@@ -1,6 +1,6 @@
 {
   "name": "expand-placeholder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Replaces placeholders into a string",
   "license": "MIT",
   "repository": "mrmlnc/expand-placeholder",
