@@ -1,1 +1,3 @@
-module.exports = require('./out/expand.js').default;
+const expand = require('./out/expand').default;
+module.exports = expand;
+module.exports.default = expand;
