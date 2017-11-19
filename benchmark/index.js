@@ -2,13 +2,14 @@
 
 const vm = require('vm');
 
+const expandPlaceholderPrev = require('expand-placeholder');
 const string = require('string');
 const stringPlaceholder = require('string-placeholder');
 const expandTemplate = require('expand-template');
 const lodashTemplate = require('lodash.template');
 const underscoreTemplate = require('underscore.template');
 
-const expandPlaceholder = require('../');
+const expandPlaceholderCurrent = require('../');
 const vmReplace = require('./vm');
 
 const str = `
@@ -34,12 +35,19 @@ const ctx = vm.createContext(data);
 let res = '';
 
 suite('Expand', () => {
-
 	set('type', 'static');
 	set('iterations', 1e6);
 
-	bench('expand-placeholder', () => {
-		res = expandPlaceholder(str, data);
+	bench('Warmup', () => {
+		res = str.split('').map((char) => char.toUpperCase()).join('');
+	});
+
+	bench('expand-placeholder (current)', () => {
+		res = expandPlaceholderCurrent(str, data);
+	});
+
+	bench('expand-placeholder (previous)', () => {
+		res = expandPlaceholderPrev(str, data);
 	});
 
 	bench('string.template', () => {

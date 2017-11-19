@@ -13,6 +13,7 @@
   },
   "typings": "./out/expand.d.ts",
   "devDependencies": {
+    "expand-placeholder": "^1.0.2",
     "expand-template": "^1.1.0",
     "lodash.template": "^4.4.0",
     "matcha": "^0.7.0",
