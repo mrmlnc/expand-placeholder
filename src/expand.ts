@@ -3,18 +3,18 @@
 export interface IOptions {
 	opening: string;
 	closing: string;
-	transformValue: (value: any) => string;
+	transformValue: <T extends string>(value: T) => string;
 }
 
-export interface IData {
-	[name: string]: number | string;
-}
+export type TData = Record<string, string | number>;
 
 function escapeRegexpString(input: string): string {
 	return input.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
 }
 
-export default function expand(input: string, data: IData, options?: Partial<IOptions>): string {
+export default function expand(input: string, data: TData, options?: Partial<IOptions>): string {
+	let result = input;
+
 	const buildedOptions: IOptions = Object.assign(<IOptions>{
 		opening: '{{',
 		closing: '}}',
@@ -28,18 +28,19 @@ export default function expand(input: string, data: IData, options?: Partial<IOp
 	}
 
 	const regexp = new RegExp(`${before}(.+?)${after}`, 'g');
-	let matchs = input.match(regexp);
-	if (!matchs) {
-		return input;
+	const matches = result.match(regexp);
+	if (!matches) {
+		return result;
 	}
 
-	for (let i = 0; i < matchs.length; i++) {
-		const match = matchs[i];
+	for (const match of matches) {
 		const name = match.substring(buildedOptions.opening.length, match.length - buildedOptions.closing.length).trim();
 		if (data.hasOwnProperty(name)) {
-			input = input.replace(match, buildedOptions.transformValue(data[name]));
+			const value = data[name].toString();
+
+			result = result.replace(match, buildedOptions.transformValue(value));
 		}
 	}
 
-	return input;
+	return result;
 }

@@ -2,101 +2,120 @@
 
 import * as assert from 'assert';
 
-import expand from './expand';
+import expand, { IOptions, TData } from './expand';
 
-interface ITransform {
-	(value: string): string;
+interface IAssert {
+	input?: string | null;
+	expected: string;
+	delimiters: [string, string];
+	data?: TData;
 }
 
-function defaultTransform<T extends string>(value: T): string {
-	return value;
-}
+function assertCase(obj: IAssert): void {
+	obj.data = Object.assign({ one: '1', two: 2 }, obj.data);
 
-function assertCase(input: string, expected: string, delimiters?: any, data?: any, transform?: ITransform): void {
-	data = Object.assign({
-		one: '1',
-		two: 2
-	}, data);
-
-	const o = {
-		opening: delimiters[0],
-		closing: delimiters[1],
-		transformValue: transform || defaultTransform
+	const opts: IOptions = {
+		opening: obj.delimiters[0],
+		closing: obj.delimiters[1],
+		transformValue: <T extends string>(value: T): string => value
 	};
 
-	const result = expand(input || `${o.opening} one ${o.closing} ${o.opening} two ${o.closing} ${o.opening} skip ${o.closing}`, data, o);
+	const defaultString = `${opts.opening} one ${opts.closing} ${opts.opening} two ${opts.closing} ${opts.opening} skip ${opts.closing}`;
 
-	assert.equal(result, expected);
+	const result = expand(obj.input || defaultString, obj.data, opts);
+
+	assert.equal(result, obj.expected);
 }
 
 describe('Expand', () => {
+	describe('Default', () => {
+		it('should works with default settings', () => assertCase({
+			expected: '1 2 {{ skip }}',
+			delimiters: ['{{', '}}']
+		}));
 
-	it('default', () => {
-		assertCase('', '1 2 {{ skip }}', ['{{', '}}']);
+		it('should works with empty value', () => assertCase({
+			expected: '1  {{ skip }}',
+			delimiters: ['{{', '}}'],
+			data: { two: '' }
+		}));
 	});
 
-	it('default with empty value', () => {
-		assertCase('', '1  {{ skip }}', ['{{', '}}'], { two: '' });
-	});
+	describe('Custom', () => {
+		it('should work with { NAME }', () => assertCase({
+			expected: '1 2 { skip }',
+			delimiters: ['{', '}']
+		}));
 
-	it('custom: { NAME }', () => {
-		assertCase('', '1 2 { skip }', ['{', '}']);
-	});
+		it('should work with {% NAME %}', () => assertCase({
+			expected: '1 2 {% skip %}',
+			delimiters: ['{%', '%}']
+		}));
 
-	it('custom: {% NAME %}', () => {
-		assertCase('', '1 2 {% skip %}', ['{%', '%}']);
-	});
+		/* tslint:disable no-invalid-template-strings */
+		it('should work with ${ NAME }', () => assertCase({
+			expected: '1 2 ${ skip }',
+			delimiters: ['${', '}']
+		}));
+		/* tslint:enable */
 
-	it('custom: ${ NAME }', () => {
-		assertCase('', '1 2 ${ skip }', ['${', '}']);
-	});
+		it('should work with #{ NAME }', () => assertCase({
+			expected: '1 2 #{ skip }',
+			delimiters: ['#{', '}']
+		}));
 
-	it('custom: #{ NAME }', () => {
-		assertCase('', '1 2 #{ skip }', ['#{', '}']);
-	});
+		it('should work with [ NAME ]', () => assertCase({
+			expected: '1 2 [ skip ]',
+			delimiters: ['[', ']']
+		}));
 
-	it('custom: [ NAME ]', () => {
-		assertCase('', '1 2 [ skip ]', ['[', ']']);
-	});
+		it('should work with ( NAME )', () => assertCase({
+			expected: '1 2 ( skip )',
+			delimiters: ['(', ')']
+		}));
 
-	it('custom: ( NAME )', () => {
-		assertCase('', '1 2 ( skip )', ['(', ')']);
-	});
+		it('should work with <% NAME %>', () => assertCase({
+			expected: '1 2 <% skip %>',
+			delimiters: ['<%', '%>']
+		}));
 
-	it('custom: <% NAME %>', () => {
-		assertCase('', '1 2 <% skip %>', ['<%', '%>']);
-	});
+		it('should work with % NAME %', () => assertCase({
+			expected: '1 2 % skip %',
+			delimiters: ['%', '%']
+		}));
 
-	it('custom: % NAME %', () => {
-		assertCase('%one% %two%%skip%', '1 2%skip%', ['%', '%']);
-	});
+		it('should work with _ NAME _', () => assertCase({
+			expected: '1 2 _ skip _',
+			delimiters: ['_', '_']
+		}));
 
-	it('custom: _ NAME _', () => {
-		assertCase('_one_ _two__skip_', '1 2_skip_', ['_', '_']);
-	});
+		it('should work with __ NAME __', () => assertCase({
+			expected: '1 2 __ skip __',
+			delimiters: ['__', '__']
+		}));
 
-	it('custom: __ NAME __', () => {
-		assertCase('__one__ __two____skip__', '1 2__skip__', ['__', '__']);
-	});
+		it('should work with me NAME me', () => assertCase({
+			input: 'me one me me two meme skip me',
+			expected: '1 2me skip me',
+			delimiters: ['me', 'me']
+		}));
 
-	it('custom: %NAME', () => {
-		assertCase('%one %two%skip', '1 2%skip', ['%', '']);
-	});
+		it('should work with %NAME', () => assertCase({
+			input: '%one %two%skip',
+			expected: '1 2%skip',
+			delimiters: ['%', '']
+		}));
 
-	it('custom: !NAME', () => {
-		assertCase('!one !two!skip', '1 2!skip', ['!', '']);
-	});
+		it('should work with !NAME', () => assertCase({
+			input: '!one !two!skip',
+			expected: '1 2!skip',
+			delimiters: ['!', '']
+		}));
 
-	it('custom: #NAME', () => {
-		assertCase('#one #two#skip', '1 2#skip', ['#', '']);
+		it('should work with #NAME', () => assertCase({
+			input: '#one #two#skip',
+			expected: '1 2#skip',
+			delimiters: ['#', '']
+		}));
 	});
-
-	it('custom: me NAME me', () => {
-		assertCase('me one me me two meme skip me', '1 2me skip me', ['me', 'me']);
-	});
-
-	it('transform function', () => {
-		assertCase('', '__1__ __2__ {{ skip }}', ['{{', '}}'], {}, (val) => `__${val}__`);
-	});
-
 });
