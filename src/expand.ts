@@ -1,45 +1,48 @@
 'use strict';
 
 export interface IOptions {
-	opening?: string;
-	closing?: string;
-	transformValue?: (value: any) => string;
+	opening: string;
+	closing: string;
+	transformValue: (<T extends string>(value: T) => string) | null;
 }
 
-export interface IData {
-	[name: string]: number | string;
-}
+export type TData = Record<string, string | number>;
 
 function escapeRegexpString(input: string): string {
 	return input.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
 }
 
-export default function expand(input: string, data: IData, options?: IOptions): string {
-	options = Object.assign(<IOptions>{
+export default function expand(input: string, data: TData, options?: Partial<IOptions>): string {
+	let result = input;
+
+	const buildedOptions: IOptions = Object.assign(<IOptions>{
 		opening: '{{',
 		closing: '}}',
-		transformValue: (val) => val
+		transformValue: null
 	}, options);
 
-	const before = escapeRegexpString(options.opening);
-	let after = escapeRegexpString(options.closing);
-	if (!after) {
+	const before = escapeRegexpString(buildedOptions.opening);
+	let after = escapeRegexpString(buildedOptions.closing);
+	if (after === '') {
 		after = `(?=[\\s${before}])`;
 	}
 
-	const regexp = new RegExp(`${before}(.+?)${after}`, 'g');
-	let matchs = input.match(regexp);
-	if (!matchs) {
-		return input;
+	const regexp = new RegExp(`${before}.+?${after}`, 'g');
+	const matches = result.match(regexp);
+	if (matches === null) {
+		return result;
 	}
 
-	for (let i = 0; i < matchs.length; i++) {
-		const match = matchs[i];
-		const name = match.substring(options.opening.length, match.length - options.closing.length).trim();
+	/* tslint:disable-next-line prefer-for-of */
+	for (let i = 0; i < matches.length; i++) {
+		const match = matches[i];
+		const name = match.substring(buildedOptions.opening.length, match.length - buildedOptions.closing.length).trim();
 		if (data.hasOwnProperty(name)) {
-			input = input.replace(match, options.transformValue(data[name]));
+			const value = data[name];
+
+			result = result.replace(match, buildedOptions.transformValue ? buildedOptions.transformValue(value as string) : value as string);
 		}
 	}
 
-	return input;
+	return result;
 }
