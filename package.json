@@ -13,6 +13,8 @@
   },
   "typings": "./out/expand.d.ts",
   "devDependencies": {
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^8.0.53",
     "expand-placeholder": "^1.0.2",
     "expand-template": "^1.1.0",
     "lodash.template": "^4.4.0",
