@@ -13,4 +13,3 @@ node_js:
 
 script:
   - npm run build
-  - npm run bench
