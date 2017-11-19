@@ -3,7 +3,7 @@
 export interface IOptions {
 	opening: string;
 	closing: string;
-	transformValue: <T extends string>(value: T) => string;
+	transformValue: (<T extends string>(value: T) => string) | null;
 }
 
 export type TData = Record<string, string | number>;
@@ -18,18 +18,18 @@ export default function expand(input: string, data: TData, options?: Partial<IOp
 	const buildedOptions: IOptions = Object.assign(<IOptions>{
 		opening: '{{',
 		closing: '}}',
-		transformValue: (val) => val
+		transformValue: null
 	}, options);
 
 	const before = escapeRegexpString(buildedOptions.opening);
 	let after = escapeRegexpString(buildedOptions.closing);
-	if (!after) {
+	if (after === '') {
 		after = `(?=[\\s${before}])`;
 	}
 
-	const regexp = new RegExp(`${before}(.+?)${after}`, 'g');
+	const regexp = new RegExp(`${before}.+?${after}`, 'g');
 	const matches = result.match(regexp);
-	if (!matches) {
+	if (matches === null) {
 		return result;
 	}
 
@@ -38,9 +38,9 @@ export default function expand(input: string, data: TData, options?: Partial<IOp
 		const match = matches[i];
 		const name = match.substring(buildedOptions.opening.length, match.length - buildedOptions.closing.length).trim();
 		if (data.hasOwnProperty(name)) {
-			const value = data[name].toString();
+			const value = data[name];
 
-			result = result.replace(match, buildedOptions.transformValue(value));
+			result = result.replace(match, buildedOptions.transformValue ? buildedOptions.transformValue(value as string) : value as string);
 		}
 	}
 
