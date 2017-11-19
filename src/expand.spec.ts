@@ -5,11 +5,11 @@ import * as assert from 'assert';
 import expand from './expand';
 
 interface ITransform {
-	(val: string): string;
+	(value: string): string;
 }
 
-function defaultTransform(val) {
-	return val;
+function defaultTransform<T extends string>(value: T): string {
+	return value;
 }
 
 function assertCase(input: string, expected: string, delimiters?: any, data?: any, transform?: ITransform): void {

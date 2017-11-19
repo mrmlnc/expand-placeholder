@@ -1,9 +1,9 @@
 'use strict';
 
 export interface IOptions {
-	opening?: string;
-	closing?: string;
-	transformValue?: (value: any) => string;
+	opening: string;
+	closing: string;
+	transformValue: (value: any) => string;
 }
 
 export interface IData {
@@ -14,15 +14,15 @@ function escapeRegexpString(input: string): string {
 	return input.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
 }
 
-export default function expand(input: string, data: IData, options?: IOptions): string {
-	options = Object.assign(<IOptions>{
+export default function expand(input: string, data: IData, options?: Partial<IOptions>): string {
+	const buildedOptions: IOptions = Object.assign(<IOptions>{
 		opening: '{{',
 		closing: '}}',
 		transformValue: (val) => val
 	}, options);
 
-	const before = escapeRegexpString(options.opening);
-	let after = escapeRegexpString(options.closing);
+	const before = escapeRegexpString(buildedOptions.opening);
+	let after = escapeRegexpString(buildedOptions.closing);
 	if (!after) {
 		after = `(?=[\\s${before}])`;
 	}
@@ -35,9 +35,9 @@ export default function expand(input: string, data: IData, options?: IOptions): 
 
 	for (let i = 0; i < matchs.length; i++) {
 		const match = matchs[i];
-		const name = match.substring(options.opening.length, match.length - options.closing.length).trim();
+		const name = match.substring(buildedOptions.opening.length, match.length - buildedOptions.closing.length).trim();
 		if (data.hasOwnProperty(name)) {
-			input = input.replace(match, options.transformValue(data[name]));
+			input = input.replace(match, buildedOptions.transformValue(data[name]));
 		}
 	}
 
