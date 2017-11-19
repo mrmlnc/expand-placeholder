@@ -42,6 +42,6 @@
     "test": "mocha out/**/*.spec.js",
     "build": "npm run clean && npm run lint&& npm run compile && npm run test ",
     "watch": "npm run clean && npm run lint && npm run compile -- --watch",
-    "bench": "node benchmark/index.js"
+    "bench": "NODE_ENV=production node benchmark/index.js"
   }
 }
