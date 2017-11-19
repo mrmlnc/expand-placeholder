@@ -13,7 +13,8 @@
   },
   "typings": "./out/expand.d.ts",
   "devDependencies": {
-    "lodash": "^4.17.4",
+    "expand-template": "^1.1.0",
+    "lodash.template": "^4.4.0",
     "matcha": "^0.7.0",
     "mocha": "^4.0.1",
     "rimraf": "^2.6.2",
@@ -21,7 +22,8 @@
     "string-placeholder": "^1.0.1",
     "tslint": "^5.8.0",
     "tslint-config-mrmlnc": "^1.0.0",
-    "typescript": "^2.6.1"
+    "typescript": "^2.6.1",
+    "underscore.template": "^0.1.7"
   },
   "files": [
     "index.js",
