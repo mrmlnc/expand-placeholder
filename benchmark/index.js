@@ -2,6 +2,8 @@
 
 const vm = require('vm');
 
+const Benchmark = require('benchmark');
+
 const expandPlaceholderPrev = require('expand-placeholder');
 const string = require('string');
 const stringPlaceholder = require('string-placeholder');
@@ -34,56 +36,63 @@ const ctx = vm.createContext(data);
 
 let res = '';
 
-suite('Expand', () => {
-	set('type', 'static');
-	set('iterations', 1e6);
+const suite = new Benchmark.Suite('Benchmark');
 
-	bench('Warmup', () => {
-		res = str.split('').map((char) => char.toUpperCase()).join('');
+const minSamples = 1e2;
+const initCount = 1e2;
+
+suite.add('expand-placeholder (current)', () => {
+	res = expandPlaceholderCurrent(str, data);
+}, { initCount, minSamples });
+
+suite.add('expand-placeholder (previous)', () => {
+	res = expandPlaceholderPrev(str, data);
+}, { initCount, minSamples });
+
+suite.add('string.template', () => {
+	res = string(str).template(data, '{{', '}}');
+}, { initCount, minSamples });
+
+suite.add('expand-template', () => {
+	res = expandTemplate({ sep: '{{}}' })(str, data);
+}, { initCount, minSamples });
+
+suite.add('string-placeholder', () => {
+	res = stringPlaceholder(str, data, {
+		before: '{{',
+		after: '}}'
 	});
+}, { initCount, minSamples });
 
-	bench('expand-placeholder (current)', () => {
-		res = expandPlaceholderCurrent(str, data);
-	});
+suite.add('lodash.template', () => {
+	// Why `lodash.template` used here?
+	// ---
+	// Most likely your string will be generated dynamically. Lodash parses the string once and
+	// does not allow to change it. So be honest make parse string every time before calling.
+	res = lodashTemplate(str, { interpolate: /{{([\s\S]+?)}}/g })(data);
+}, { initCount, minSamples });
 
-	bench('expand-placeholder (previous)', () => {
-		res = expandPlaceholderPrev(str, data);
-	});
+suite.add('underscore.template', () => {
+	// Why `underscore.template` used here?
+	// ---
+	// Most likely your string will be generated dynamically. Underscore parses the string once and
+	// does not allow to change it. So be honest make parse string every time before calling.
+	res = underscoreTemplate(str, data, { interpolate: /{{([\s\S]+?)}}/g });
+}, { initCount, minSamples });
 
-	bench('string.template', () => {
-		res = string(str).template(data, '{{', '}}');
-	});
+suite.add('vm', () => {
+	// https://github.com/posthtml/posthtml-expressions/blob/d80c026536e849d82d98d9970f72d6de4d6f2d4b/lib/expression_parser.js
+	res = vmReplace(ctx, [['{{', '}}']], str);
+}, { initCount, minSamples });
 
-	bench('expand-template', () => {
-		res = expandTemplate({ sep: '{{}}' })(str, data);
-	});
-
-	bench('string-placeholder', () => {
-		res = stringPlaceholder(str, data, {
-			before: '{{',
-			after: '}}'
-		});
-	});
-
-	bench('lodash.template', () => {
-		// Why `lodash.template` used here?
-		// ---
-		// Most likely your string will be generated dynamically. Lodash parses the string once and
-		// does not allow to change it. So be honest make parse string every time before calling.
-		res = lodashTemplate(str, { interpolate: /{{([\s\S]+?)}}/g })(data);
-	});
-
-	bench('underscore.template', () => {
-		// Why `underscore.template` used here?
-		// ---
-		// Most likely your string will be generated dynamically. Underscore parses the string once and
-		// does not allow to change it. So be honest make parse string every time before calling.
-		res = underscoreTemplate(str, data, { interpolate: /{{([\s\S]+?)}}/g });
-	});
-
-	bench('vm', () => {
-		// https://github.com/posthtml/posthtml-expressions/blob/d80c026536e849d82d98d9970f72d6de4d6f2d4b/lib/expression_parser.js
-		res = vmReplace(ctx, [['{{', '}}']], str);
-	});
-
+suite.on('cycle', (event) => {
+	console.log(event.target.toString());
 });
+
+suite.on('complete', function() {
+	console.log();
+	console.log('-----');
+	console.log('Fastest is ' + this.filter('fastest').map('name'));
+});
+
+suite.run();
