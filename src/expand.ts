@@ -33,7 +33,9 @@ export default function expand(input: string, data: TData, options?: Partial<IOp
 		return result;
 	}
 
-	for (const match of matches) {
+	/* tslint:disable-next-line prefer-for-of */
+	for (let i = 0; i < matches.length; i++) {
+		const match = matches[i];
 		const name = match.substring(buildedOptions.opening.length, match.length - buildedOptions.closing.length).trim();
 		if (data.hasOwnProperty(name)) {
 			const value = data[name].toString();
